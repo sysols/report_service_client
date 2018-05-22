@@ -6,7 +6,7 @@ from report_service_client import ReportServiceClient
 
 rs_client = ReportServiceClient()
 file_info = rs_client.render_file_report(
-    report_file_slug=report_file_slug, context=context
+    report_file_slug='str', context={}
 )
 print(file_info.file_url)
 
