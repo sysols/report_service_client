@@ -35,6 +35,13 @@ class ReportServiceClient:
         )
         return self._download_file(file_info.file_url)
 
+    def render_and_save_file_report(self, report_file_slug: str, context: dict, file_path: str):
+        file_buffer = self.render_and_download_file_report(
+            report_file_slug=report_file_slug, context=context
+        )
+        with open(file_path, 'wb') as f:
+            f.write(file_buffer.getvalue())
+
     def _render(self, api_url: str, context: dict) -> dict:
         response = requests.post(api_url, json=context)
 
