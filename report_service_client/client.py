@@ -1,4 +1,5 @@
 import collections
+import io
 
 import requests
 
@@ -13,7 +14,7 @@ RenderedFileInfo = collections.namedtuple(
 )
 
 
-class ReportServiceClient(object):
+class ReportServiceClient:
     def __init__(self, url_resolver: ReportServiceURLResolver=None):
         self.url_resolver = url_resolver or ReportServiceURLResolver()
 
@@ -28,6 +29,12 @@ class ReportServiceClient(object):
             file_url=self.url_resolver.get_url_for_document(file_id=rendered_file_id)
         )
 
+    def render_and_download_file_report(self, report_file_slug: str, context: dict) -> io.BytesIO:
+        file_info = self.render_file_report(
+            report_file_slug=report_file_slug, context=context
+        )
+        return self._download_file(file_info.file_url)
+
     def _render(self, api_url: str, context: dict) -> dict:
         response = requests.post(api_url, json=context)
 
@@ -40,3 +47,13 @@ class ReportServiceClient(object):
             raise ConnectionError(error_messages)
 
         return response_json
+
+    def _download_file(self, file_url: str) -> io.BytesIO:
+        response_file = requests.get(file_url, stream=True)
+        if response_file.status_code != 200:
+            raise ConnectionError(response_file.text)
+
+        buffer = io.BytesIO()
+        for chunk in response_file:
+            buffer.write(chunk)
+        return buffer
